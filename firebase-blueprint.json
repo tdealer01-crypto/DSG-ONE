@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the DSG ONE Command Center.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "operator", "viewer"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Agent": {
+      "title": "Agent",
+      "description": "An autonomous agent managed by the system.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "env": { "type": "string", "enum": ["Production", "Staging", "Development"] },
+        "policy": { "type": "string" },
+        "quota": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "ownerId", "name", "env", "policy", "quota"]
+    },
+    "Execution": {
+      "title": "Execution",
+      "description": "A log of an agent's execution.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "agentId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "action": { "type": "string" },
+        "result": { "type": "string", "enum": ["ALLOW", "DENY", "WARN"] },
+        "reason": { "type": "string" },
+        "latency": { "type": "string" },
+        "proofRef": { "type": "string" },
+        "auditRef": { "type": "string" },
+        "ts": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "agentId", "ownerId", "action", "result", "reason", "ts"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles."
+    },
+    "/agents/{agentId}": {
+      "schema": { "$ref": "#/entities/Agent" },
+      "description": "Stores agent configurations."
+    },
+    "/executions/{executionId}": {
+      "schema": { "$ref": "#/entities/Execution" },
+      "description": "Stores execution logs."
+    }
+  }
+}
