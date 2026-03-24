@@ -1,4 +1,4 @@
-import { Server, Plus, Shield, Clock, Key, Activity, MapPin, Loader2 } from "lucide-react";
+import { Server, Plus, Shield, Clock, Key, Activity, MapPin, Loader2, Settings2, Cpu, Network } from "lucide-react";
 import { useState } from "react";
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from "react-markdown";
@@ -10,9 +10,48 @@ export default function Fleet() {
   const [isLoadingMap, setIsLoadingMap] = useState(false);
 
   const agents = [
-    { name: "Data-Sync-Bot", env: "Production", policy: "strict-read-only", lastActive: "2 mins ago", quota: "10,000/mo", apiKey: "sk-dsg-***8f4a", recentActions: ["Read DB", "Sync API"] },
-    { name: "Support-Agent-1", env: "Production", policy: "email-reply-only", lastActive: "Just now", quota: "5,000/mo", apiKey: "sk-dsg-***9b2c", recentActions: ["Read Ticket", "Send Email"] },
-    { name: "Infra-Scaler", env: "Staging", policy: "scale-up-only", lastActive: "1 hour ago", quota: "1,000/mo", apiKey: "sk-dsg-***1a7d", recentActions: ["Check Load", "Scale Web"] },
+    { 
+      name: "Data-Sync-Bot", 
+      env: "Production", 
+      policy: "strict-read-only", 
+      lastActive: "2 mins ago", 
+      quota: "10,000/mo", 
+      apiKey: "sk-dsg-***8f4a", 
+      recentActions: ["Read DB", "Sync API"],
+      plannerProvider: "DSG Default (Gemini)",
+      runtimeProvider: "DSG Managed Runtime",
+      fallbackProvider: "OpenAI (GPT-4o)",
+      executionPolicy: "Guarded",
+      approvalPolicy: "Auto-approve Read-only"
+    },
+    { 
+      name: "Support-Agent-1", 
+      env: "Production", 
+      policy: "email-reply-only", 
+      lastActive: "Just now", 
+      quota: "5,000/mo", 
+      apiKey: "sk-dsg-***9b2c", 
+      recentActions: ["Read Ticket", "Send Email"],
+      plannerProvider: "Anthropic (Claude 3.5 Sonnet)",
+      runtimeProvider: "Custom Agent Endpoint",
+      fallbackProvider: "None",
+      executionPolicy: "Approval Required",
+      approvalPolicy: "Human-in-the-loop for Emails"
+    },
+    { 
+      name: "Infra-Scaler", 
+      env: "Staging", 
+      policy: "scale-up-only", 
+      lastActive: "1 hour ago", 
+      quota: "1,000/mo", 
+      apiKey: "sk-dsg-***1a7d", 
+      recentActions: ["Check Load", "Scale Web"],
+      plannerProvider: "Ollama (Llama 3)",
+      runtimeProvider: "Local Docker Runtime",
+      fallbackProvider: "DSG Default (Gemini)",
+      executionPolicy: "Sandbox",
+      approvalPolicy: "Auto-approve Staging"
+    },
   ];
 
   const locateAgents = async () => {
@@ -53,7 +92,7 @@ export default function Fleet() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Fleet / Agents</h1>
-          <p className="text-muted-foreground">Manage and monitor your autonomous agent fleet.</p>
+          <p className="text-muted-foreground">Manage and monitor your autonomous agent fleet and provider bindings.</p>
         </div>
         <div className="flex gap-2">
           <button 
@@ -81,42 +120,81 @@ export default function Fleet() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {agents.map((agent, i) => (
           <div key={i} className="bg-card border border-border rounded-xl p-6 flex flex-col hover:border-primary/50 transition-colors">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-secondary-foreground">
-                  <Server size={20} />
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-secondary-foreground">
+                  <Server size={24} />
                 </div>
                 <div>
-                  <h3 className="font-semibold">{agent.name}</h3>
-                  <div className="text-xs font-mono text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded inline-block mt-1">{agent.env}</div>
+                  <h3 className="text-lg font-semibold">{agent.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="text-xs font-mono text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded inline-block">{agent.env}</div>
+                    <div className="flex items-center gap-1 text-xs text-success">
+                      <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                      Online
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <button className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                <Settings2 size={18} />
+              </button>
             </div>
             
-            <div className="space-y-4 flex-1">
-              <div className="flex items-center gap-3 text-sm">
-                <Shield size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground w-20">Policy:</span>
-                <span className="font-mono text-xs bg-secondary px-2 py-1 rounded">{agent.policy}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Provider Bindings</h4>
+                
+                <div className="flex items-start gap-3 text-sm">
+                  <Cpu size={16} className="text-muted-foreground mt-0.5" />
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Planner Provider</span>
+                    <span className="font-medium">{agent.plannerProvider}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 text-sm">
+                  <Network size={16} className="text-muted-foreground mt-0.5" />
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Runtime Provider</span>
+                    <span className="font-medium">{agent.runtimeProvider}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 text-sm">
+                  <Shield size={16} className="text-muted-foreground mt-0.5" />
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Fallback Provider</span>
+                    <span className="font-medium">{agent.fallbackProvider}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Clock size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground w-20">Last Active:</span>
-                <span>{agent.lastActive}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Activity size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground w-20">Quota:</span>
-                <span>{agent.quota}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Key size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground w-20">API Key:</span>
-                <span className="font-mono text-xs">{agent.apiKey}</span>
+
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Governance & Stats</h4>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Execution Policy:</span>
+                  <span className="font-mono text-xs bg-secondary px-2 py-1 rounded">{agent.executionPolicy}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Approval Policy:</span>
+                  <span className="font-mono text-xs bg-secondary px-2 py-1 rounded truncate max-w-[150px]" title={agent.approvalPolicy}>{agent.approvalPolicy}</span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Last Active:</span>
+                  <span>{agent.lastActive}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Quota:</span>
+                  <span>{agent.quota}</span>
+                </div>
               </div>
             </div>
             
