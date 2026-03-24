@@ -4,7 +4,7 @@ import { useAgent } from "../context/AgentContext";
 export default function Ledger() {
   const { ledger } = useAgent();
 
-  const mockEvents = [
+  const mockEvents: any[] = [
     { id: 'm1', ts: "2026-03-24T12:45:12Z", type: "DECISION", detail: "Agent Data-Sync-Bot action ALLOWED", hash: "0x8f4a...e21b", status: 'SUCCESS' },
     { id: 'm2', ts: "2026-03-24T12:45:12Z", type: "PROOF", detail: "Z3 verification SAT (Safe)", hash: "0x7e3b...d10a", status: 'SUCCESS' },
     { id: 'm3', ts: "2026-03-24T12:44:05Z", type: "DECISION", detail: "Agent Support-Agent-1 action ALLOWED", hash: "0x9b2c...f32c", status: 'SUCCESS' },
@@ -12,7 +12,7 @@ export default function Ledger() {
     { id: 'm5', ts: "2026-03-24T12:40:15Z", type: "DECISION", detail: "Agent Data-Sync-Bot action BLOCKED", hash: "0x2b8e...b56e", status: 'REJECTED' },
   ];
 
-  const realEvents = ledger.map(entry => ({
+  const realEvents: any[] = ledger.map(entry => ({
     id: entry.id,
     ts: entry.timestamp,
     type: "ACTION",
