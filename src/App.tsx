@@ -16,38 +16,39 @@ import Docs from "./pages/Docs";
 import Settings from "./pages/Settings";
 import Invariants from "./pages/Invariants";
 import Stability from "./pages/Stability";
-import Chatbot from "./components/Chatbot";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AgentProvider } from "./context/AgentContext";
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Trust Layer */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/docs" element={<Docs />} />
-          
-          {/* Command Layer */}
-          <Route path="/app" element={<Navigate to="/app/monitor" replace />} />
-          <Route path="/app/*" element={
-            <Layout>
-              <Routes>
-                <Route path="monitor" element={<MissionControl />} />
-                <Route path="fleet" element={<Fleet />} />
-                <Route path="operations" element={<Executions />} />
-                <Route path="invariants" element={<Invariants />} />
-                <Route path="stability" element={<Stability />} />
-                <Route path="ledger" element={<Ledger />} />
-                <Route path="proofs" element={<Proofs />} />
-                <Route path="capacity" element={<Billing />} />
-                <Route path="settings" element={<Settings />} />
-              </Routes>
-            </Layout>
-          } />
-        </Routes>
-        <Chatbot />
-      </BrowserRouter>
+      <AgentProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Trust Layer */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/docs" element={<Docs />} />
+            
+            {/* Command Layer */}
+            <Route path="/app" element={<Navigate to="/app/monitor" replace />} />
+            <Route path="/app/*" element={
+              <Layout>
+                <Routes>
+                  <Route path="monitor" element={<MissionControl />} />
+                  <Route path="fleet" element={<Fleet />} />
+                  <Route path="operations" element={<Executions />} />
+                  <Route path="invariants" element={<Invariants />} />
+                  <Route path="stability" element={<Stability />} />
+                  <Route path="ledger" element={<Ledger />} />
+                  <Route path="proofs" element={<Proofs />} />
+                  <Route path="capacity" element={<Billing />} />
+                  <Route path="settings" element={<Settings />} />
+                </Routes>
+              </Layout>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </AgentProvider>
     </ErrorBoundary>
   );
 }

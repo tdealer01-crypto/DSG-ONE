@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { auth, loginWithGoogle, logout } from "../firebase";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import OperatorConsole from "./OperatorConsole";
 
 const navItems = [
   { label: "Mission Control", path: "/app/monitor", icon: <LayoutDashboard size={18} /> },
@@ -130,6 +131,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+      <OperatorConsole />
     </div>
   );
 }

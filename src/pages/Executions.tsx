@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Filter, Search } from "lucide-react";
+import { useAgent } from "../context/AgentContext";
 
 export default function Executions() {
+  const { ledger } = useAgent();
   const [activeFilter, setActiveFilter] = useState("ALL");
   const filters = ["ALL", "ALLOW", "BLOCK", "STABILIZE"];
 
-  const executions = [
+  const mockExecutions = [
     { id: "exec_1a2b", agent: "Data-Sync-Bot", action: "Write to DB", result: "ALLOW", reason: "Policy match: strict-read-only", latency: "12ms", proofRef: "prf_8f4a", auditRef: "0x8f4a...e21b" },
     { id: "exec_3c4d", agent: "Support-Agent-1", action: "Send Email", result: "ALLOW", reason: "Policy match: email-reply-only", latency: "45ms", proofRef: "prf_9b2c", auditRef: "0x9b2c...f32c" },
     { id: "exec_5e6f", agent: "Infra-Scaler", action: "Scale Up Web", result: "STABILIZE", reason: "Approaching quota limit (90%)", latency: "110ms", proofRef: "prf_1a7d", auditRef: "0x1a7d...a45d" },
@@ -13,7 +15,19 @@ export default function Executions() {
     { id: "exec_9i0j", agent: "Support-Agent-2", action: "Read Ticket", result: "ALLOW", reason: "Policy match: email-reply-only", latency: "22ms", proofRef: "prf_3c9f", auditRef: "0x3c9f...c67f" },
   ];
 
-  const filtered = activeFilter === "ALL" ? executions : executions.filter(e => e.result === activeFilter);
+  const realExecutions = ledger.map(entry => ({
+    id: entry.id,
+    agent: "Operator Console",
+    action: entry.tool || "Unknown",
+    result: entry.decision || "PENDING",
+    reason: entry.reason || entry.status,
+    latency: entry.result?.duration || "N/A",
+    proofRef: entry.proofRef,
+    auditRef: entry.auditId
+  }));
+
+  const allExecutions = [...realExecutions, ...mockExecutions];
+  const filtered = activeFilter === "ALL" ? allExecutions : allExecutions.filter(e => e.result === activeFilter);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -62,7 +76,7 @@ export default function Executions() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((e, i) => (
-                <tr key={i} className="hover:bg-secondary/10 transition-colors">
+                <tr key={e.id + i} className="hover:bg-secondary/10 transition-colors">
                   <td className="px-6 py-4 font-mono text-xs">{e.id}</td>
                   <td className="px-6 py-4 font-medium">{e.agent}</td>
                   <td className="px-6 py-4">{e.action}</td>
