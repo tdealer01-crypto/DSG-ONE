@@ -5,6 +5,27 @@ import { emitEvent } from "../events";
 
 export const executeRouter = Router();
 
+executeRouter.post("/approve", async (req, res) => {
+  const proposal = req.body;
+
+  emitEvent("proposal.approved", { proposal });
+  emitEvent("execution.started", { action: proposal.action });
+
+  const result = await executeAction(proposal.action);
+
+  emitEvent("execution.finished", {
+    action: proposal.action,
+    result,
+  });
+
+  return res.json({
+    ok: result.ok,
+    stage: "execute",
+    decision: "approve",
+    result,
+  });
+});
+
 executeRouter.post("/", async (req, res) => {
   const proposal = req.body;
 

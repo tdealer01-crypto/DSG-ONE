@@ -1,3 +1,5 @@
+import { tools } from "../src/lib/agent/tools";
+
 export type ExecAction = {
   tool: string;
   arguments?: Record<string, any>;
@@ -17,6 +19,27 @@ export async function executeAction(action: ExecAction): Promise<ExecResult> {
   const started = Date.now();
 
   if (action.tool !== "exec") {
+    const tool = tools[action.tool];
+    if (tool) {
+      try {
+        const result = await tool.execute(action.arguments || {});
+        return {
+          ok: result.success !== false,
+          output: JSON.stringify(result),
+          error: result.error || null,
+          duration_ms: Date.now() - started,
+          tool: action.tool,
+        };
+      } catch (err: any) {
+        return {
+          ok: false,
+          error: err?.message || "Execution failed",
+          duration_ms: Date.now() - started,
+          tool: action.tool,
+        };
+      }
+    }
+
     return {
       ok: false,
       error: `Unsupported tool: ${action.tool}`,

@@ -34,7 +34,7 @@ export async function validateProposal(
 ): Promise<ValidationResult> {
   const cmd = String(proposal.action?.arguments?.command || "").toLowerCase();
 
-  if (!cmd) {
+  if ((proposal.action?.tool === "exec" || proposal.action?.tool === "shell_run_command") && !cmd) {
     return {
       decision: "reject",
       request_id: proposal.request_id,
@@ -44,7 +44,7 @@ export async function validateProposal(
     };
   }
 
-  if (DANGEROUS_PATTERNS.some((p) => cmd.includes(p))) {
+  if (cmd && DANGEROUS_PATTERNS.some((p) => cmd.includes(p))) {
     return {
       decision: "reject",
       request_id: proposal.request_id,

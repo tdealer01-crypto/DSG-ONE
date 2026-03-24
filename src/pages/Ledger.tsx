@@ -4,15 +4,7 @@ import { useAgent } from "../context/AgentContext";
 export default function Ledger() {
   const { ledger } = useAgent();
 
-  const mockEvents: any[] = [
-    { id: 'm1', ts: "2026-03-24T12:45:12Z", type: "DECISION", detail: "Agent Data-Sync-Bot action ALLOWED", hash: "0x8f4a...e21b", status: 'SUCCESS' },
-    { id: 'm2', ts: "2026-03-24T12:45:12Z", type: "PROOF", detail: "Z3 verification SAT (Safe)", hash: "0x7e3b...d10a", status: 'SUCCESS' },
-    { id: 'm3', ts: "2026-03-24T12:44:05Z", type: "DECISION", detail: "Agent Support-Agent-1 action ALLOWED", hash: "0x9b2c...f32c", status: 'SUCCESS' },
-    { id: 'm4', ts: "2026-03-24T12:42:30Z", type: "DECISION", detail: "Agent Infra-Scaler action STABILIZED", hash: "0x1a7d...a45d", status: 'SUCCESS' },
-    { id: 'm5', ts: "2026-03-24T12:40:15Z", type: "DECISION", detail: "Agent Data-Sync-Bot action BLOCKED", hash: "0x2b8e...b56e", status: 'REJECTED' },
-  ];
-
-  const realEvents: any[] = ledger.map(entry => ({
+  const allEvents = ledger.map(entry => ({
     id: entry.id,
     ts: entry.timestamp,
     type: "ACTION",
@@ -22,9 +14,7 @@ export default function Ledger() {
     decision: entry.decision,
     reason: entry.reason,
     result: entry.result
-  }));
-
-  const allEvents = [...realEvents, ...mockEvents].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+  })).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
 
   const getStatusIcon = (status: string, decision?: string) => {
     if (status === 'SUCCESS' && decision !== 'BLOCK') return <CheckCircle2 size={16} className="text-emerald-500" />;

@@ -35,9 +35,7 @@ export const tools: Record<string, ToolDefinition> = {
         const data = await response.json();
         
         // Basic HTML to text extraction
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        const text = doc.body.textContent?.replace(/\s+/g, ' ').trim().substring(0, 2000) || "No content found";
+        const text = data.contents.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 2000) || "No content found";
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(2) + "s";
         return { success: true, text, duration };
@@ -338,9 +336,7 @@ export const tools: Record<string, ToolDefinition> = {
         const data = await response.json();
         
         const results = data.query.search.map((r: any) => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(r.snippet, 'text/html');
-          return { title: r.title, snippet: doc.body.textContent };
+          return { title: r.title, snippet: r.snippet.replace(/<[^>]*>?/gm, '') };
         });
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(2) + "s";
@@ -369,6 +365,27 @@ export const tools: Record<string, ToolDefinition> = {
     execute: async ({ systemId, status }) => {
       await new Promise(r => setTimeout(r, 400));
       return { success: true, message: `System ${systemId} status updated to ${status}`, duration: "0.4s" };
+    }
+  },
+
+  // M. MCP Execution
+  exec: {
+    name: 'exec',
+    description: 'Execute a command via MCP (Model Context Protocol)',
+    category: 'Shell',
+    actionClass: 'REQUIRE_APPROVAL',
+    declaration: {
+      name: "exec",
+      description: "Execute a command via MCP (Model Context Protocol)",
+      parameters: {
+        type: Type.OBJECT,
+        properties: { command: { type: Type.STRING } },
+        required: ["command"]
+      }
+    },
+    execute: async ({ command }) => {
+      // This is handled by the backend /api/execute
+      return { success: true, message: "Handled by backend" };
     }
   }
 };

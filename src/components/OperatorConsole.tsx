@@ -3,7 +3,7 @@ import { MessageSquare, X, Send, Mic, Volume2, Loader2, Maximize2, Minimize2, Sh
 import { GoogleGenAI, Type, Modality, ThinkingLevel } from "@google/genai";
 import ReactMarkdown from "react-markdown";
 import { useAgent, Proposal } from "../context/AgentContext";
-import { tools, getToolDeclarations, validateProposal } from "../lib/agent/tools";
+import { tools, getToolDeclarations } from "../lib/agent/tools";
 
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -51,34 +51,6 @@ export default function OperatorConsole() {
     });
   }, []);
 
-  const executeTool = async (toolName: string, args: any, actionId: string) => {
-    const tool = tools[toolName];
-    if (!tool) throw new Error(`Tool ${toolName} not found`);
-    const startTime = Date.now();
-    try {
-      const result = await tool.execute(args);
-      const duration = `${((Date.now() - startTime) / 1000).toFixed(2)}s`;
-      return {
-        success: result.success !== false,
-        output: result,
-        error: result.error || null,
-        duration: result.duration || duration,
-        toolName,
-        actionId
-      };
-    } catch (e) {
-      const duration = `${((Date.now() - startTime) / 1000).toFixed(2)}s`;
-      return {
-        success: false,
-        output: null,
-        error: String(e),
-        duration,
-        toolName,
-        actionId
-      };
-    }
-  };
-
   const handleSend = async (textOverride?: string) => {
     const userMsg = textOverride || input;
     if (!userMsg.trim() || state !== 'IDLE') return;
@@ -89,6 +61,7 @@ export default function OperatorConsole() {
     setState('THINKING');
 
     try {
+      // 1. Send to Gemini to get a proposal
       let response = await chatRef.current.sendMessage({ message: userMsg });
       
       // Process tool calls loop
@@ -98,29 +71,46 @@ export default function OperatorConsole() {
         const args = call.args;
         
         setState('VALIDATING');
-        const { decision, reason } = validateProposal(toolName, args);
+        
+        // 2. Build proposal payload for backend
+        const proposalPayload = {
+          request_id: Math.random().toString(36).substring(7),
+          step_id: Math.random().toString(36).substring(7),
+          goal: userMsg,
+          thought: `Executing tool ${toolName}`,
+          action: {
+            tool: toolName,
+            arguments: args
+          },
+          context: { source: "chat" }
+        };
+
+        // 3. Send to /api/execute
+        const res = await fetch("/api/execute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(proposalPayload)
+        });
+
+        const resultData = await res.json();
         
         const proposal: Proposal = {
-          id: Math.random().toString(36).substring(7),
+          id: proposalPayload.request_id,
           toolName,
           args,
-          decision,
-          reason
+          decision: resultData.decision === "approve" ? "ALLOW" : resultData.decision === "revise" ? "STABILIZE" : "BLOCK",
+          reason: resultData.hint?.message || "Processed by backend"
         };
         setActiveProposal(proposal);
         
         let toolResult;
         let status: 'SUCCESS' | 'FAILED' | 'REJECTED' = 'SUCCESS';
         
-        if (decision === 'ALLOW') {
+        if (resultData.decision === 'approve') {
           setState('EXECUTING');
-          try {
-            toolResult = await executeTool(toolName, args, proposal.id);
-          } catch (e) {
-            toolResult = { error: String(e) };
-            status = 'FAILED';
-          }
-        } else if (decision === 'STABILIZE') {
+          toolResult = resultData.result;
+          status = resultData.ok ? 'SUCCESS' : 'FAILED';
+        } else if (resultData.decision === 'revise') {
           setState('WAITING_APPROVAL');
           const approved = await new Promise<boolean>((resolve) => {
             pendingApprovalCallback.current = resolve;
@@ -129,9 +119,16 @@ export default function OperatorConsole() {
           if (approved) {
             setState('EXECUTING');
             try {
-              toolResult = await executeTool(toolName, args, proposal.id);
+              const approveRes = await fetch("/api/execute/approve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(proposalPayload)
+              });
+              const approveResult = await approveRes.json();
+              toolResult = approveResult.result;
+              status = approveResult.ok ? 'SUCCESS' : 'FAILED';
             } catch (e) {
-              toolResult = { error: String(e) };
+              toolResult = { error: "Execution failed after approval: " + String(e) };
               status = 'FAILED';
             }
           } else {
@@ -140,7 +137,7 @@ export default function OperatorConsole() {
           }
         } else {
           // BLOCK
-          toolResult = { error: "Action blocked by safety policy: " + reason };
+          toolResult = { error: "Action blocked by safety policy: " + (resultData.hint?.message || "Rejected") };
           status = 'REJECTED';
         }
         
@@ -151,8 +148,8 @@ export default function OperatorConsole() {
           goal: userMsg,
           proposal,
           tool: toolName,
-          decision,
-          reason,
+          decision: proposal.decision,
+          reason: proposal.reason,
           result: toolResult,
           status,
           auditId: `AUD-${Math.floor(Math.random() * 100000)}`,

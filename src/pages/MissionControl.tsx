@@ -14,7 +14,6 @@ import {
   Terminal,
 } from "lucide-react";
 import { useAgent } from "../context/AgentContext";
-import { useEventStream } from "../hooks/useEventStream";
 
 function MetricCard({
   title,
@@ -60,88 +59,6 @@ function MetricCard({
 
 export default function MissionControl() {
   const { state, ledger, activeProposal } = useAgent();
-  const events = useEventStream();
-
-  const mockDecisionStream = [
-    {
-      time: "12:45:12",
-      agent: "Data-Sync-Bot",
-      id: "exec_1a2b",
-      req: "Write DB",
-      decision: "ALLOW",
-      hit: "-",
-      reason: "Policy match",
-      proof: "prf_8f4a",
-    },
-    {
-      time: "12:45:10",
-      agent: "Support-Agent-1",
-      id: "exec_3c4d",
-      req: "Send Email",
-      decision: "ALLOW",
-      hit: "-",
-      reason: "Policy match",
-      proof: "prf_9b2c",
-    },
-    {
-      time: "12:44:55",
-      agent: "Infra-Scaler",
-      id: "exec_5e6f",
-      req: "Scale Web",
-      decision: "STABILIZE",
-      hit: "INV-004",
-      reason: "Quota near limit",
-      proof: "prf_1a7d",
-    },
-    {
-      time: "12:44:30",
-      agent: "Data-Sync-Bot",
-      id: "exec_7g8h",
-      req: "Delete DB",
-      decision: "BLOCK",
-      hit: "INV-001",
-      reason: "Read-only violation",
-      proof: "prf_2b8e",
-    },
-    {
-      time: "12:44:15",
-      agent: "Support-Agent-2",
-      id: "exec_9i0j",
-      req: "Read Ticket",
-      decision: "ALLOW",
-      hit: "-",
-      reason: "Policy match",
-      proof: "prf_3c9f",
-    },
-  ];
-
-  const streamDecisions = events
-    .filter((e) => e.type.startsWith("validator."))
-    .slice(-10)
-    .reverse()
-    .map((e) => {
-      const decisionMap: Record<string, string> = {
-        approve: "ALLOW",
-        reject: "BLOCK",
-        revise: "STABILIZE",
-      };
-      const rawDecision = e.payload.validation?.decision || "unknown";
-      return {
-        time: new Date(e.ts).toLocaleTimeString(),
-        agent: "DSG-Runtime",
-        id: e.payload.proposal?.request_id || "req-?",
-        req: e.payload.proposal?.action?.tool || "Unknown",
-        decision: decisionMap[rawDecision] || rawDecision.toUpperCase(),
-        hit:
-          rawDecision === "reject"
-            ? "INV-001"
-            : rawDecision === "revise"
-              ? "INV-002"
-              : "-",
-        reason: e.payload.validation?.hint?.message || "Policy match",
-        proof: "prf_" + Math.random().toString(36).substring(2, 6),
-      };
-    });
 
   const realDecisionStream = ledger.map((entry) => ({
     time: new Date(entry.timestamp).toLocaleTimeString(),
@@ -157,60 +74,54 @@ export default function MissionControl() {
           : "-",
     reason: entry.reason || entry.status,
     proof: entry.proofRef,
-  }));
+  })).reverse();
 
-  const decisionStream = [
-    ...streamDecisions,
-    ...realDecisionStream,
-    ...mockDecisionStream,
-  ].slice(0, 10);
+  const decisionStream = realDecisionStream.slice(0, 15);
 
   const fleetSummary = [
     {
-      name: "Data-Sync-Bot",
-      health: "99.9%",
-      latency: "12ms",
-      quota: "85%",
-      env: "Prod",
-      mission: "Sync CRM",
-    },
-    {
-      name: "Support-Agent-1",
+      name: "DSG-Runtime",
       health: "100%",
-      latency: "45ms",
-      quota: "42%",
+      latency: "12ms",
+      quota: "N/A",
       env: "Prod",
-      mission: "Triage",
+      mission: "Core Execution",
     },
     {
-      name: "Infra-Scaler",
-      health: "98.5%",
-      latency: "110ms",
-      quota: "92%",
-      env: "Staging",
-      mission: "Auto-scale",
-    },
+      name: "Operator Console",
+      health: "100%",
+      latency: "N/A",
+      quota: "N/A",
+      env: "Prod",
+      mission: "Command Interface",
+    }
   ];
 
-  const proofQueue = [
-    ...ledger
-      .slice(0, 2)
-      .map((l) => ({
-        id: l.proofRef,
-        type: l.tool || "Action",
-        status: l.status === "SUCCESS" ? "Verified" : "Logged",
-      })),
-    { id: "prf_8f4a", type: "Safety Invariance", status: "Verified" },
-    { id: "prf_9b2c", type: "Determinism Check", status: "Verified" },
-    { id: "prf_1a7d", type: "Policy Bound", status: "Verified" },
-    { id: "prf_2b8e", type: "Violation Proof", status: "Logged" },
-  ].slice(0, 5);
+  const proofQueue = ledger
+    .slice(0, 10)
+    .map((l) => ({
+      id: l.proofRef,
+      type: l.tool || "Action",
+      status: l.status === "SUCCESS" ? "Verified" : l.status === "REJECTED" ? "Rejected" : "Logged",
+    }));
 
-  const heatmapData = Array.from({ length: 24 }).map((_, i) => Math.random());
+  // Generate heatmap based on real events/ledger
+  const blockCount = ledger.filter(l => l.decision === 'BLOCK').length;
+  const stabilizeCount = ledger.filter(l => l.decision === 'STABILIZE').length;
+  
+  const heatmapData = Array.from({ length: 24 }).map((_, i) => {
+    if (i < blockCount) return 0.95;
+    if (i < blockCount + stabilizeCount) return 0.75;
+    return 0.1;
+  });
 
-  const allowCount = ledger.filter((l) => l.decision === "ALLOW").length + 92;
-  const totalDecisions = ledger.length + 100;
+  const allowCount = ledger.filter((l) => l.decision === "ALLOW").length;
+  const totalDecisions = ledger.length || 1; // Prevent division by zero
   const allowRate = Math.round((allowCount / totalDecisions) * 100);
+  
+  const activeAgents = fleetSummary.length;
+  const execsCount = ledger.length;
+  const stabilityScore = ledger.length === 0 ? 100 : Math.max(0, 100 - (blockCount * 5) - (stabilizeCount * 2)).toFixed(1);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 h-full flex flex-col">
@@ -233,22 +144,22 @@ export default function MissionControl() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 shrink-0">
         <MetricCard
           title="Global Stability"
-          value="99.8"
+          value={stabilityScore}
           sub="Score"
           icon={<ShieldAlert size={14} />}
-          status="success"
+          status={Number(stabilityScore) > 90 ? "success" : Number(stabilityScore) > 70 ? "warning" : "danger"}
         />
         <MetricCard
           title="Active Agents"
-          value="24"
+          value={activeAgents}
           sub="Online"
           icon={<Server size={14} />}
           status="success"
         />
         <MetricCard
-          title="Execs / min"
-          value="1,402"
-          sub="+12% trend"
+          title="Total Execs"
+          value={execsCount}
+          sub="All time"
           icon={<Activity size={14} />}
           status="neutral"
         />
@@ -290,7 +201,7 @@ export default function MissionControl() {
         />
         <MetricCard
           title="Capacity Usage"
-          value="34%"
+          value={`${Math.min(100, (execsCount / 1000) * 100).toFixed(1)}%`}
           sub="Of monthly quota"
           icon={<Clock size={14} />}
           status="neutral"
