@@ -8,7 +8,7 @@ export type ExecAction = {
 export type ExecResult = {
   ok: boolean;
   output?: string;
-  error?: string;
+  error?: string | null;
   duration_ms: number;
   tool: string;
 };
@@ -24,62 +24,85 @@ export async function executeAction(action: ExecAction): Promise<ExecResult> {
       try {
         const result = await tool.execute(action.arguments || {});
         return {
-          ok: result.success !== false,
+          ok: result?.success !== false,
           output: JSON.stringify(result),
-          error: result.error || null,
+          error: result?.error || null,
           duration_ms: Date.now() - started,
-          tool: action.tool,
+          tool: action.tool
         };
       } catch (err: any) {
         return {
           ok: false,
           error: err?.message || "Execution failed",
           duration_ms: Date.now() - started,
-          tool: action.tool,
+          tool: action.tool
         };
       }
     }
 
     return {
       ok: false,
-      error: `Unsupported tool: ${action.tool}`,
+      error: "Unsupported tool: " + action.tool,
       duration_ms: Date.now() - started,
-      tool: action.tool,
-    };
-  }
-
-  const command = action.arguments?.command;
-  if (!command) {
-    return {
-      ok: false,
-      error: "Missing command",
-      duration_ms: Date.now() - started,
-      tool: action.tool,
+      tool: action.tool
     };
   }
 
   try {
+    const method =
+      action.arguments?.method ||
+      (action.arguments?.command ? "system.exec" : null);
+
+    const params =
+      action.arguments?.params ||
+      (action.arguments?.command ? { command: action.arguments.command } : null);
+
+    if (!method) {
+      return {
+        ok: false,
+        error: "Missing MCP method",
+        duration_ms: Date.now() - started,
+        tool: action.tool
+      };
+    }
+
     const res = await fetch(MCP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ params: { command } }),
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: Date.now(),
+        method,
+        params
+      })
     });
 
     const data: any = await res.json();
+
+    if (data?.error) {
+      return {
+        ok: false,
+        error: data.error.message || "MCP execution failed",
+        duration_ms: Date.now() - started,
+        tool: action.tool
+      };
+    }
+
     const output = data?.result?.content?.[0]?.text ?? JSON.stringify(data);
 
     return {
       ok: true,
       output,
+      error: null,
       duration_ms: Date.now() - started,
-      tool: action.tool,
+      tool: action.tool
     };
   } catch (err: any) {
     return {
       ok: false,
       error: err?.message || "Execution failed",
       duration_ms: Date.now() - started,
-      tool: action.tool,
+      tool: action.tool
     };
   }
 }
