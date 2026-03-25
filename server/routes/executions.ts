@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { listExecutions } from "../repositories/executions";
+import { db } from "../db";
 
 export const executionsRouter = Router();
 
 executionsRouter.get("/", async (_req, res) => {
-  const data = await listExecutions();
-  res.json(data);
+  try {
+    await db.read();
+    res.json(db.data?.executions || []);
+  } catch (err: any) {
+    res.json({ ok: false, error: err.message });
+  }
 });
