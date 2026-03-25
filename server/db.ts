@@ -1,35 +1,33 @@
-import { JSONFilePreset } from "lowdb/node";
+import { Low } from "lowdb";
+import { JSONFile } from "lowdb/node";
 
-export type StoredExecution = {
-  id: string;
-  timestamp: string;
-  goal: string;
-  tool: string;
-  decision: string;
-  reason: string;
-  result: any;
-  status: string;
-  auditId: string;
-  proofRef: string;
+type DBSchema = {
+  executions: any[];
+  providers: any[];
+  proofs: any[];
+  ledger: any[];
 };
 
-export type StoredProvider = {
-  id: string;
-  name: string;
-  kind: "gemini" | "ollama" | "openai" | "custom-agent";
-  baseUrl?: string;
-  apiKey?: string;
-  model?: string;
-  enabled: boolean;
-  isDefault: boolean;
-};
+const adapter = new JSONFile<DBSchema>("data/db.json");
 
-export type DBSchema = {
-  executions: StoredExecution[];
-  providers: StoredProvider[];
-};
-
-export const db = await JSONFilePreset<DBSchema>("data/db.json", {
+export const db = new Low<DBSchema>(adapter, {
   executions: [],
   providers: [],
+  proofs: [],
+  ledger: []
 });
+
+// ❌ ห้ามใช้ top-level await
+// await db.read();
+
+// ✅ ใช้ init function แทน
+export async function initDB() {
+  await db.read();
+  db.data ||= {
+    executions: [],
+    providers: [],
+    proofs: [],
+    ledger: []
+  };
+  await db.write();
+}
