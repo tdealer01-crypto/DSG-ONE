@@ -9,11 +9,12 @@ import { providersRouter } from "./routes/providers";
 import { executionsRouter } from "./routes/executions";
 import { proofsRouter } from "./routes/proofs";
 import { replayRouter } from "./routes/replay";
+import { agentRouter } from "./routes/agent";
 import { startMcpServer } from "./mcp/index";
 import { initDB } from "./db";
 
 async function startServer() {
-  await initDB(); // ✅ สำคัญมาก
+  await initDB();
 
   const app = express();
   const PORT = Number(process.env.PORT || 3000);
@@ -32,6 +33,7 @@ async function startServer() {
   app.use("/api/executions", executionsRouter);
   app.use("/api/proofs", proofsRouter);
   app.use("/api/replay", replayRouter);
+  app.use("/api/agent", agentRouter);
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
