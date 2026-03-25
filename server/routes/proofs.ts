@@ -1,17 +1,14 @@
 import { Router } from "express";
-import { listProofs, getProofById } from "../repositories/proofs";
+import { db } from "../db";
 
 export const proofsRouter = Router();
 
+// GET /api/proofs
 proofsRouter.get("/", async (_req, res) => {
-  const proofs = await listProofs();
-  res.json(proofs);
-});
-
-proofsRouter.get("/:id", async (req, res) => {
-  const proof = await getProofById(req.params.id);
-  if (!proof) {
-    return res.status(404).json({ error: "Proof not found" });
+  try {
+    await db.read();
+    res.json(db.data?.proofs || []);
+  } catch (err: any) {
+    res.json({ ok: false, error: err.message });
   }
-  res.json(proof);
 });

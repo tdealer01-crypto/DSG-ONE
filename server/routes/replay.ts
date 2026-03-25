@@ -3,23 +3,19 @@ import { db } from "../db";
 
 export const replayRouter = Router();
 
-replayRouter.get("/:executionId", async (req, res) => {
-  const executionId = req.params.executionId;
+replayRouter.get("/:id", async (req, res) => {
+  try {
+    await db.read();
+    const id = req.params.id;
 
-  const execution = db.data.executions.find(e => e.id === executionId);
-  if (!execution) {
-    return res.status(404).json({ error: "Execution not found" });
+    const exec = db.data?.executions?.find((e: any) => e.id === id);
+
+    if (!exec) {
+      return res.json({ ok: false, error: "not found" });
+    }
+
+    res.json(exec);
+  } catch (err: any) {
+    res.json({ ok: false, error: err.message });
   }
-
-  const proofs = (db.data as any).proofs || [];
-  const ledger = (db.data as any).ledger || [];
-
-  const proof = proofs.find((p: any) => p.id === execution.proofRef);
-  const trace = ledger.filter((l: any) => l.execution_id === executionId);
-
-  return res.json({
-    execution,
-    proof,
-    trace
-  });
 });
