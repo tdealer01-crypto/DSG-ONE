@@ -1,8 +1,21 @@
 import { Low } from "lowdb";
 import { JSONFile } from "lowdb/node";
 
+export type StoredExecution = {
+  id: string;
+  timestamp: string;
+  goal: string;
+  tool: string;
+  decision: string;
+  reason: string;
+  result: any;
+  status: string;
+  auditId: string;
+  proofRef: string;
+};
+
 type DBSchema = {
-  executions: any[];
+  executions: StoredExecution[];
   providers: any[];
   proofs: any[];
   ledger: any[];
@@ -14,20 +27,16 @@ export const db = new Low<DBSchema>(adapter, {
   executions: [],
   providers: [],
   proofs: [],
-  ledger: []
+  ledger: [],
 });
 
-// ❌ ห้ามใช้ top-level await
-// await db.read();
-
-// ✅ ใช้ init function แทน
 export async function initDB() {
   await db.read();
   db.data ||= {
     executions: [],
     providers: [],
     proofs: [],
-    ledger: []
+    ledger: [],
   };
   await db.write();
 }
