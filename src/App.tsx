@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { AgentProvider } from "./context/AgentContext";
 import OperatorConsole from "./components/OperatorConsole";
@@ -8,7 +9,7 @@ import MarketplaceReviewer from "./pages/MarketplaceReviewer";
 import GcpMarketplace from "./pages/GcpMarketplace";
 import Login from "./pages/Login";
 
-const navLinkStyle: React.CSSProperties = {
+const navLinkStyle: CSSProperties = {
   color: "#cbd5e1",
   textDecoration: "none",
   fontWeight: 600,

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 export default function Login() {
@@ -29,14 +30,14 @@ export default function Login() {
   );
 }
 
-const shellStyle: React.CSSProperties = {
+const shellStyle: CSSProperties = {
   minHeight: "100vh",
   background: "#020617",
   color: "#e2e8f0",
   padding: "32px 20px 64px",
 };
 
-const cardStyle: React.CSSProperties = {
+const cardStyle: CSSProperties = {
   maxWidth: 680,
   margin: "0 auto",
   border: "1px solid rgba(148,163,184,0.18)",
@@ -46,7 +47,7 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "0 20px 60px rgba(2,6,23,0.4)",
 };
 
-const badgeStyle: React.CSSProperties = {
+const badgeStyle: CSSProperties = {
   display: "inline-flex",
   padding: "8px 12px",
   borderRadius: 999,
@@ -59,7 +60,7 @@ const badgeStyle: React.CSSProperties = {
   textTransform: "uppercase",
 };
 
-const titleStyle: React.CSSProperties = {
+const titleStyle: CSSProperties = {
   margin: "18px 0 0",
   fontSize: "clamp(36px, 7vw, 58px)",
   lineHeight: 1,
@@ -67,20 +68,20 @@ const titleStyle: React.CSSProperties = {
   color: "#f8fafc",
 };
 
-const textStyle: React.CSSProperties = {
+const textStyle: CSSProperties = {
   marginTop: 18,
   color: "#cbd5e1",
   fontSize: 18,
   lineHeight: 1.7,
 };
 
-const buttonColumnStyle: React.CSSProperties = {
+const buttonColumnStyle: CSSProperties = {
   display: "grid",
   gap: 14,
   marginTop: 24,
 };
 
-const primaryButtonStyle: React.CSSProperties = {
+const primaryButtonStyle: CSSProperties = {
   minHeight: 48,
   borderRadius: 16,
   border: 0,
@@ -90,7 +91,7 @@ const primaryButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const secondaryButtonStyle: React.CSSProperties = {
+const secondaryButtonStyle: CSSProperties = {
   minHeight: 48,
   borderRadius: 16,
   border: "1px solid rgba(148,163,184,0.26)",
@@ -100,7 +101,7 @@ const secondaryButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const infoCardStyle: React.CSSProperties = {
+const infoCardStyle: CSSProperties = {
   marginTop: 24,
   padding: 18,
   borderRadius: 18,
@@ -108,7 +109,7 @@ const infoCardStyle: React.CSSProperties = {
   background: "rgba(15,23,42,0.75)",
 };
 
-const linkButtonStyle: React.CSSProperties = {
+const linkButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",

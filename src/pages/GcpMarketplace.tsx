@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 export default function GcpMarketplace() {
@@ -30,14 +31,14 @@ export default function GcpMarketplace() {
   );
 }
 
-const shellStyle: React.CSSProperties = {
+const shellStyle: CSSProperties = {
   minHeight: "100vh",
   background: "#020617",
   color: "#e2e8f0",
   padding: "32px 20px 64px",
 };
 
-const heroStyle: React.CSSProperties = {
+const heroStyle: CSSProperties = {
   maxWidth: 960,
   margin: "0 auto",
   border: "1px solid rgba(148,163,184,0.18)",
@@ -48,7 +49,7 @@ const heroStyle: React.CSSProperties = {
   boxShadow: "0 20px 60px rgba(2,6,23,0.4)",
 };
 
-const badgeStyle: React.CSSProperties = {
+const badgeStyle: CSSProperties = {
   display: "inline-flex",
   padding: "8px 12px",
   borderRadius: 999,
@@ -61,7 +62,7 @@ const badgeStyle: React.CSSProperties = {
   textTransform: "uppercase",
 };
 
-const titleStyle: React.CSSProperties = {
+const titleStyle: CSSProperties = {
   margin: "18px 0 0",
   fontSize: "clamp(40px, 7vw, 68px)",
   lineHeight: 0.98,
@@ -69,7 +70,7 @@ const titleStyle: React.CSSProperties = {
   color: "#f8fafc",
 };
 
-const leadStyle: React.CSSProperties = {
+const leadStyle: CSSProperties = {
   maxWidth: 760,
   marginTop: 18,
   color: "#cbd5e1",
@@ -77,14 +78,14 @@ const leadStyle: React.CSSProperties = {
   lineHeight: 1.7,
 };
 
-const buttonRowStyle: React.CSSProperties = {
+const buttonRowStyle: CSSProperties = {
   display: "flex",
   gap: 14,
   flexWrap: "wrap",
   marginTop: 26,
 };
 
-const primaryButtonStyle: React.CSSProperties = {
+const primaryButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -97,7 +98,7 @@ const primaryButtonStyle: React.CSSProperties = {
   textDecoration: "none",
 };
 
-const secondaryButtonStyle: React.CSSProperties = {
+const secondaryButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -111,7 +112,7 @@ const secondaryButtonStyle: React.CSSProperties = {
   textDecoration: "none",
 };
 
-const panelStyle: React.CSSProperties = {
+const panelStyle: CSSProperties = {
   maxWidth: 960,
   margin: "24px auto 0",
   border: "1px solid rgba(148,163,184,0.18)",
@@ -120,13 +121,13 @@ const panelStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96))",
 };
 
-const headingStyle: React.CSSProperties = {
+const headingStyle: CSSProperties = {
   margin: 0,
   fontSize: 30,
   color: "#f8fafc",
 };
 
-const listStyle: React.CSSProperties = {
+const listStyle: CSSProperties = {
   margin: "18px 0 0",
   paddingLeft: 20,
   color: "#cbd5e1",
