@@ -1,10 +1,45 @@
-import { Download, History, Terminal, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download, Terminal, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { useAgent } from "../context/AgentContext";
+
+type ServerLedgerEntry = {
+  id: string;
+  execution_id: string;
+  proof_id: string;
+  audit_id: string;
+  event_type: string;
+  payload: any;
+  created_at: string;
+};
 
 export default function Ledger() {
   const { ledger } = useAgent();
+  const [serverLedger, setServerLedger] = useState<ServerLedgerEntry[]>([]);
 
-  const allEvents = ledger.map(entry => ({
+  useEffect(() => {
+    let active = true;
+
+    async function loadLedger() {
+      try {
+        const res = await fetch("/api/ledger");
+        const data = await res.json();
+        if (!active) return;
+        setServerLedger(Array.isArray(data) ? data : []);
+      } catch {
+        if (!active) return;
+        setServerLedger([]);
+      }
+    }
+
+    loadLedger();
+    const timer = window.setInterval(loadLedger, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const clientEvents = ledger.map((entry) => ({
     id: entry.id,
     ts: entry.timestamp,
     type: "ACTION",
@@ -13,14 +48,36 @@ export default function Ledger() {
     status: entry.status,
     decision: entry.decision,
     reason: entry.reason,
-    result: entry.result
-  })).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+    result: entry.result,
+  }));
+
+  const persistedEvents = serverLedger.map((entry) => ({
+    id: entry.id,
+    ts: entry.created_at,
+    type: entry.event_type,
+    detail: `[${entry.payload?.action?.tool || "exec"}] ${entry.payload?.reason || entry.event_type}`,
+    hash: entry.audit_id,
+    status:
+      entry.event_type === "execution.allowed"
+        ? entry.payload?.result_ok ? "SUCCESS" : "FAILED"
+        : entry.event_type === "execution.blocked" || entry.event_type === "execution.stabilized"
+          ? "REJECTED"
+          : "PENDING",
+    decision: entry.payload?.decision,
+    reason: entry.payload?.reason,
+    result: entry.payload,
+  }));
+
+  const allEvents = useMemo(() => {
+    const items = persistedEvents.length > 0 ? persistedEvents : clientEvents;
+    return [...items].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+  }, [persistedEvents, clientEvents]);
 
   const getStatusIcon = (status: string, decision?: string) => {
-    if (status === 'SUCCESS' && decision !== 'BLOCK') return <CheckCircle2 size={16} className="text-emerald-500" />;
-    if (status === 'FAILED') return <XCircle size={16} className="text-destructive" />;
-    if (status === 'REJECTED' || decision === 'BLOCK') return <XCircle size={16} className="text-destructive" />;
-    if (decision === 'STABILIZE') return <AlertTriangle size={16} className="text-amber-500" />;
+    if (status === "SUCCESS" && decision !== "BLOCK") return <CheckCircle2 size={16} className="text-emerald-500" />;
+    if (status === "FAILED") return <XCircle size={16} className="text-destructive" />;
+    if (status === "REJECTED" || decision === "BLOCK") return <XCircle size={16} className="text-destructive" />;
+    if (decision === "STABILIZE") return <AlertTriangle size={16} className="text-amber-500" />;
     return <Terminal size={16} className="text-muted-foreground" />;
   };
 
@@ -41,12 +98,12 @@ export default function Ledger() {
           {allEvents.map((e) => (
             <div key={e.id} className="relative">
               <div className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-background border-2 border-primary" />
-              
+
               <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-6">
                 <div className="text-sm font-mono text-muted-foreground w-24 shrink-0 pt-1">
                   {new Date(e.ts).toLocaleTimeString()}
                 </div>
-                
+
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(e.status, e.decision)}
@@ -56,13 +113,13 @@ export default function Ledger() {
                       {e.hash}
                     </span>
                   </div>
-                  
+
                   {e.decision && (
                     <div className="ml-7 text-sm text-muted-foreground">
                       <span className="font-semibold">Validator:</span> {e.decision} - {e.reason}
                     </div>
                   )}
-                  
+
                   {e.result && (
                     <div className="ml-7 mt-2 bg-secondary/30 rounded-md p-3 font-mono text-xs overflow-x-auto border border-border/50">
                       {JSON.stringify(e.result, null, 2)}
@@ -72,7 +129,7 @@ export default function Ledger() {
               </div>
             </div>
           ))}
-          
+
           {allEvents.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
               No events recorded yet.

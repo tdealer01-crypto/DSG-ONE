@@ -10,6 +10,7 @@ import { executionsRouter } from "./routes/executions";
 import { proofsRouter } from "./routes/proofs";
 import { replayRouter } from "./routes/replay";
 import { agentRouter } from "./routes/agent";
+import { ledgerRouter } from "./routes/ledger";
 import { startMcpServer } from "./mcp/index";
 import { initDB } from "./db";
 
@@ -34,6 +35,7 @@ async function startServer() {
   app.use("/api/proofs", proofsRouter);
   app.use("/api/replay", replayRouter);
   app.use("/api/agent", agentRouter);
+  app.use("/api/ledger", ledgerRouter);
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
