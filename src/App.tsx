@@ -4,6 +4,7 @@ import OperatorConsole from "./components/OperatorConsole";
 import Proofs from "./pages/Proofs";
 import Executions from "./pages/Executions";
 import Fleet from "./pages/Fleet";
+import Ledger from "./pages/Ledger";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
             <Link to="/">Fleet</Link>
             <Link to="/proofs">Proofs</Link>
             <Link to="/replay">Replay</Link>
+            <Link to="/ledger">Ledger</Link>
           </nav>
 
           <div style={{ marginTop: 20 }}>
@@ -23,6 +25,7 @@ export default function App() {
               <Route path="/" element={<Fleet />} />
               <Route path="/proofs" element={<Proofs />} />
               <Route path="/replay" element={<Executions />} />
+              <Route path="/ledger" element={<Ledger />} />
               <Route path="*" element={<div>Route not found</div>} />
             </Routes>
           </div>
